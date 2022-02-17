@@ -80,7 +80,7 @@
                     needUpdateEnv.status = 0;
                 }
                 //update 
-                var responseMessage = client.PutAsJsonAsync($"{Qlhost}/open/envs",new { value = needUpdateEnv.value,name=needUpdateEnv.value,remarks=needUpdateEnv.remarks,_id=needUpdateEnv._id}).ConfigureAwait(false).GetAwaiter().GetResult();
+                var responseMessage = client.PutAsJsonAsync($"{Qlhost}/open/envs",new { value = needUpdateEnv.value,name=needUpdateEnv.name,remarks=needUpdateEnv.remarks,_id=needUpdateEnv._id}).ConfigureAwait(false).GetAwaiter().GetResult();
                 if (responseMessage.IsSuccessStatusCode)
                 {
                     //启用账号
