@@ -5,6 +5,7 @@
 @using QLEnvPut.Response;
 @using System.Linq;
 @inject IConfiguration configuration;
+@inject MessageService _message
 @inject IHttpClientFactory clientFactory;
 
 <PageContainer Title="提交环境变量">
@@ -36,6 +37,12 @@
         /// </summary>/
         [Required]
         public string Env { get; set; }
+
+        public string ErrorMsg { get; set; }
+
+        public bool ShowError { get; set; } = false;
+
+
     }
 
     private Model model = new Model();
@@ -79,20 +86,18 @@
                     //启用账号
                     var response = client.PutAsJsonAsync($"{Qlhost}/open/envs/enable",new string[] {needUpdateEnv._id }).ConfigureAwait(false).GetAwaiter().GetResult();
                     if (response.IsSuccessStatusCode)
-                    { 
-                      
+                    {
+                        _message.Success("更新成功!");
                     }
 
                 }
 
             }
-          
+
         }
         catch (Exception ex)
         {
-
-          
-
+            _message.Error($"出错!{ex.Message}");
         }
 
 
