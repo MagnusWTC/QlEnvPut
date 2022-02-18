@@ -21,6 +21,7 @@ namespace QLEnvPut.Service
         }
         public bool UpdateCK(Model model)
         {
+            
             try
             {
                 var pin = "pt_pin=.+?;";
@@ -36,41 +37,42 @@ namespace QLEnvPut.Service
                 var ClientId = configuration.GetSection("QlConfig:ClientId").Value;
                 var ClientSecret = configuration.GetSection("QlConfig:ClientSecret").Value;
                 var Qlhost = configuration.GetSection("QlConfig:QlHost").Value;
-                var client = clientFactory.CreateClient();
-                var token = "";
-                var tokenUrl = $"{Qlhost}/open/auth/token?client_id={ClientId}&client_secret={ClientSecret}";
-                var data = client.GetFromJsonAsync<TokenResponse>(tokenUrl).ConfigureAwait(false).GetAwaiter().GetResult();
-                if (data.code == 200)
+                using (var client = clientFactory.CreateClient())
                 {
-                    token = data.data.token;
-                }
-                //获取到token 获取环境变量
-                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-                var dd = client.GetStringAsync($"{Qlhost}/open/envs").ConfigureAwait(false).GetAwaiter().GetResult();
-                var envs = client.GetFromJsonAsync<EnvsResponse>($"{Qlhost}/open/envs").ConfigureAwait(false).GetAwaiter().GetResult();
-                if (envs.code == 200)
-                {
-                    string[] values = mapCkStr.Split(';');
-                    var pt_pin = values.FirstOrDefault(m => m.Contains("pt_pin"));
-                    var id = GetEnvByPtIn(pt_pin, envs.data);
-                    var needUpdateEnv = envs.data.FirstOrDefault(x => x._id == id);
-                    if (needUpdateEnv != null)
+                    var token = "";
+                    var tokenUrl = $"{Qlhost}/open/auth/token?client_id={ClientId}&client_secret={ClientSecret}";
+                    var data = client.GetFromJsonAsync<TokenResponse>(tokenUrl).ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (data.code == 200)
                     {
-                        needUpdateEnv.value = mapCkStr.Trim();
-                        needUpdateEnv.status = 0;
+                        token = data.data.token;
                     }
-                    //update 
-                    var responseMessage = client.PutAsJsonAsync($"{Qlhost}/open/envs", new { value = needUpdateEnv.value, name = needUpdateEnv.name, remarks = needUpdateEnv.remarks, _id = needUpdateEnv._id }).ConfigureAwait(false).GetAwaiter().GetResult();
-                    if (responseMessage.IsSuccessStatusCode)
+                    //获取到token 获取环境变量
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+                    var dd = client.GetStringAsync($"{Qlhost}/open/envs").ConfigureAwait(false).GetAwaiter().GetResult();
+                    var envs = client.GetFromJsonAsync<EnvsResponse>($"{Qlhost}/open/envs").ConfigureAwait(false).GetAwaiter().GetResult();
+                    if (envs.code == 200)
                     {
-                        //启用账号
-                        var response = client.PutAsJsonAsync($"{Qlhost}/open/envs/enable", new string[] { needUpdateEnv._id }).ConfigureAwait(false).GetAwaiter().GetResult();
-                        if (response.IsSuccessStatusCode)
+                        string[] values = mapCkStr.Split(';');
+                        var pt_pin = values.FirstOrDefault(m => m.Contains("pt_pin"));
+                        var id = GetEnvByPtIn(pt_pin, envs.data);
+                        var needUpdateEnv = envs.data.FirstOrDefault(x => x._id == id);
+                        if (needUpdateEnv != null)
                         {
-                            res = true;
+                            needUpdateEnv.value = mapCkStr.Trim();
+                            needUpdateEnv.status = 0;
                         }
+                        //update 
+                        var responseMessage = client.PutAsJsonAsync($"{Qlhost}/open/envs", new { value = needUpdateEnv.value, name = needUpdateEnv.name, remarks = needUpdateEnv.remarks, _id = needUpdateEnv._id }).ConfigureAwait(false).GetAwaiter().GetResult();
+                        if (responseMessage.IsSuccessStatusCode)
+                        {
+                            //启用账号
+                            var response = client.PutAsJsonAsync($"{Qlhost}/open/envs/enable", new string[] { needUpdateEnv._id }).ConfigureAwait(false).GetAwaiter().GetResult();
+                            if (response.IsSuccessStatusCode)
+                            {
+                                res = true;
+                            }
 
+                        } 
                     }
 
                 }
