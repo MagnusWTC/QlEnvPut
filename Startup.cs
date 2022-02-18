@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using QLEnvPut.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,7 @@ namespace QLEnvPut
             services.AddServerSideBlazor();
             services.AddAntDesign();
             services.AddHttpClient();
+            services.AddScoped<CommitService>();
             services.AddScoped(sp => new HttpClient
             {
                 BaseAddress = new Uri(sp.GetService<NavigationManager>().BaseUri)
