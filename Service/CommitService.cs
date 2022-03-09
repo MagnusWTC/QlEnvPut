@@ -55,18 +55,22 @@ namespace QLEnvPut.Service
                         string[] values = mapCkStr.Split(';');
                         var pt_pin = values.FirstOrDefault(m => m.Contains("pt_pin"));
                         var id = GetEnvByPtIn(pt_pin, envs.data);
-                        var needUpdateEnv = envs.data.FirstOrDefault(x => x._id == id);
+                        if (id<0)
+                        {
+                            throw new Exception("账号未存在，请联系管理员添加");
+                        }
+                        var needUpdateEnv = envs.data.FirstOrDefault(x => x.id == id);
                         if (needUpdateEnv != null)
                         {
                             needUpdateEnv.value = mapCkStr.Trim();
                             needUpdateEnv.status = 0;
                         }
                         //update 
-                        var responseMessage = client.PutAsJsonAsync($"{Qlhost}/open/envs", new { value = needUpdateEnv.value, name = needUpdateEnv.name, remarks = needUpdateEnv.remarks, _id = needUpdateEnv._id }).ConfigureAwait(false).GetAwaiter().GetResult();
+                        var responseMessage = client.PutAsJsonAsync($"{Qlhost}/open/envs", new { value = needUpdateEnv.value, name = needUpdateEnv.name, remarks = needUpdateEnv.remarks, id = needUpdateEnv.id }).ConfigureAwait(false).GetAwaiter().GetResult();
                         if (responseMessage.IsSuccessStatusCode)
                         {
                             //启用账号
-                            var response = client.PutAsJsonAsync($"{Qlhost}/open/envs/enable", new string[] { needUpdateEnv._id }).ConfigureAwait(false).GetAwaiter().GetResult();
+                            var response = client.PutAsJsonAsync($"{Qlhost}/open/envs/enable", new int[] { needUpdateEnv.id }).ConfigureAwait(false).GetAwaiter().GetResult();
                             if (response.IsSuccessStatusCode)
                             {
                                 res = true;
@@ -92,7 +96,7 @@ namespace QLEnvPut.Service
         /// </summary>
         /// <param name="env"></param>
         /// <returns></returns>
-        private string GetEnvByPtIn(string pt_pin, Envs[] envs)
+        private int GetEnvByPtIn(string pt_pin, Envs[] envs)
         {
             if (envs != null)
             {
@@ -101,13 +105,13 @@ namespace QLEnvPut.Service
                 {
                     if (item.value.Contains(pt_pin))
                     {
-                        return item._id;
+                        return item.id;
                     }
 
                 }
             }
 
-            return null;
+            return -1;
 
         }
 

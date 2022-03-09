@@ -21,7 +21,7 @@ namespace QLEnvPut.Response
 
     public class Envs
     {
-        public string _id { get; set; }
+        public int id { get; set; }
         public string value { get; set; }
         public string timestamp { get; set; }
         public int status { get; set; }
